@@ -26,7 +26,7 @@ var cookie = {
 }
 
 require(["D2Bot"], function (D2BOTAPI) {
-    var API = (typeof socket !== "undefined") ? socket : D2BOTAPI("localhost", "8080");
+    var API = (typeof socket !== "undefined") ? socket : D2BOTAPI();
     var md5 = CryptoJS.MD5;
 
     (function enableBackToTop() {
@@ -59,6 +59,11 @@ require(["D2Bot"], function (D2BOTAPI) {
     function initialize()
     {
         cookie.load();
+		
+		if (!cookie.data.server) {
+			cookie.data.server = "http://localhost:8080";
+			cookie.save();
+		}
 
         if (cookie.data.username && cookie.data.session) {
             API.emit('validate', cookie.data.username, cookie.data.session, function (err, valid) {
@@ -68,7 +73,7 @@ require(["D2Bot"], function (D2BOTAPI) {
                 }
 
                 if (!valid) {
-                    login("public", "public", function (loggedin) {
+                    login("public", "public", cookie.data.server, function (loggedin) {
                         start(loggedin);
                     });
                 } else {
@@ -76,7 +81,7 @@ require(["D2Bot"], function (D2BOTAPI) {
                 }
             });
         } else {
-            login("public", "public", function (loggedin) {
+            login("public", "public", cookie.data.server, function (loggedin) {
                 start(loggedin);
             });
         }
@@ -84,9 +89,9 @@ require(["D2Bot"], function (D2BOTAPI) {
         refreshList();
     }
 
-    function login(username, password, callback)
+    function login(username, password, server, callback)
     {
-        API.emit('login', username, password, function (err, result) {
+        API.emit('login', username, password, server, function (err, result) {
             if (err) {
                 console.log(err);
                 cookie.data.username = "";
@@ -95,7 +100,8 @@ require(["D2Bot"], function (D2BOTAPI) {
                 cookie.save();
                 return callback(false);
             }
-
+			
+			cookie.data.server = server;
             cookie.data.username = username;
             cookie.data.session = result;
             cookie.data.loggedin = (username !== "public") ? true : false;
@@ -594,7 +600,7 @@ require(["D2Bot"], function (D2BOTAPI) {
         $(".logout-btn").off("click");
         $(".logout-btn").click(function () {
             $(".logged-in-out").fadeToggle("hide");
-            login("public", "public", function(loggedin){});
+            login("public", "public", cookie.data.server, function(loggedin){});
         });
     }
 
@@ -615,9 +621,14 @@ require(["D2Bot"], function (D2BOTAPI) {
     $("#login-ok-btn").click(function () {
         var username = String($("#ld-login-user").val());
         var password = String($("#ld-login-pw").val());
+		var server = String($("#ld-login-api").val());
+		
+		if (server.length == 0) {
+			server = "http://localhost:8080";
+		}
 
         if (username.length > 0 && password.length > 0) {
-            login(username, password, function (loggedin) {
+            login(username, password, server, function (loggedin) {
                 start(loggedin);
             });
         }

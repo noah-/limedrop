@@ -9,11 +9,10 @@ if (typeof define !== 'function') {
 }
 
 define(["events"],function (events) {
-    var $$self = function (host, port) {
+    var $$self = function () {
         
         var d2botConfig = {
-            hostname: host,
-            port: port,
+            host: "http://localhost:8080",
             username: "public"
         };
         
@@ -99,11 +98,14 @@ define(["events"],function (events) {
             });
         })
         
-        D2BotAPI.on("login",function(username,password,callback){
+        D2BotAPI.on("login",function(username,password,server,callback){
             d2botConfig.username = username;
+			d2botConfig.host = server;
 
             D2BotAPI.emit("challenge",function (err, msg) {
-                if (msg.status != "success") {
+				if (msg === "error") {
+					callback(msg, null);
+                } else if (msg.status != "success") {
                     callback(msg.status, msg.body);
                 } else {
                     d2botConfig.session = encrypt(msg.body, password);
@@ -231,7 +233,7 @@ define(["events"],function (events) {
         
         D2BotAPI.on("registerEvent",function(type, done){
             var self = this;
-            var args = [type, "http://localhost:8080/api"];
+            var args = [type, d2botConfig.host + "/api"];
             $get({ func: "registerEvent", args: args }, function (msg) {
                 if (msg.status == "success") {
                     if (done)
@@ -251,7 +253,7 @@ define(["events"],function (events) {
         
         makePostRequest = function makePostRequest_jquery(d2botConfig, data, callback) {
             var $request = {
-                url: "http://localhost:8080/api",// + Base64blob,
+                url: d2botConfig.host + "/api",// + Base64blob,
                 type: "POST",
 				crossDomain: true,
                 dataType: "text",
