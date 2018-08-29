@@ -574,7 +574,7 @@ require(["D2Bot"], function (D2BOTAPI) {
 
                 $item.remove();
 
-                var hash = API.md5(item.realm+item.account).toString();
+                var hash = API.md5(item.realm.toLowerCase() + item.account.toLowerCase()).toString();
 
                 if (!drops[hash]) {
                     drops[hash] = [];
