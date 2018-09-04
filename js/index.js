@@ -235,16 +235,7 @@ require(["D2Bot"], function (D2BOTAPI) {
     }
 
     function buildregex(str) {
-        if (str.length == 0) {
-            return str;
-        }
-
-        var $str = str.split(" ");
-        var $$str = "";
-        for (var i in $str) {
-            $$str += "(?=.*" + $str[i] + ")";
-        }
-        return $$str;
+        return str;
     }
 
     function addItemstoList() {
@@ -262,57 +253,37 @@ require(["D2Bot"], function (D2BOTAPI) {
                 }
             });
         }
-        var charListid, ended;
+
+        var ended;
         var account = $("#account-select").val();
         var character = $("#character-select").val();
-        if (character == "Show All" && account == "Show All") {
+
+        if (character == "Show All") {
             var accList = [];
+
             for (var i in AccountsMap) {
                 accList.push(i);
             }
+
             var accountListid = 0;
-            charListid = 0;
             ended = false;
+
             window.loadMoreItem = function () {
                 if (accountListid == accList.length) {
                     if (!ended) {
-                        $("#items-list").append("<div>End Of Items on Accounts</div>");
+                        $("#items-list").append("<div>End of Items on Accounts</div>");
                         ended = true;
                         window.loadMoreItem = false;
                     }
+
                     return;
                 }
-                if (charListid == AccountsMap[accList[accountListid]].length) {
-                    accountListid = accountListid + 1;
-                    charListid = 0;
-                    return;
-                }
-                var acc = accList[accountListid];
-                var char = AccountsMap[accList[accountListid]][charListid];
-                charListid = charListid + 1;
-                doQuery(acc, char, window.loadMoreItem);
+
+                var acc = accList[accountListid++];
+
+                doQuery(acc, "", window.loadMoreItem);
             };
-            window.loadMoreItem();
-        }
-        else if (character == "Show All" && account != "Show All") {
-            var charList = [];
-            $("#character-select").find("option").each(function (index) {
-                charList.push(this.innerText);
-            });
-            charListid = 1;
-            ended = false;
-            window.loadMoreItem = function () {
-                if (charListid == charList.length) {
-                    if (!ended) {
-                        $("#items-list").append("<div>End Of Items on Account</div>");
-                        ended = true;
-                    }
-                    return;
-                }
-                var char = charList[charListid];
-                charListid = charListid + 1;
-                doQuery($("#account-select").val(), char, window.loadMoreItem);
-            };
+
             window.loadMoreItem();
         }
         else doQuery($("#account-select").val(), character);
