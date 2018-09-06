@@ -28,6 +28,8 @@ var cookie = {
 require(["D2Bot"], function (D2BOTAPI) {
     var API = (typeof socket !== "undefined") ? socket : D2BOTAPI();
     var md5 = CryptoJS.MD5;
+	var itemCount = 0;
+	var MAX_ITEM = 100;
 
     (function enableBackToTop() {
         var backToTop = $('<a>', { id: 'back-to-top', href: '#top' });
@@ -147,6 +149,8 @@ require(["D2Bot"], function (D2BOTAPI) {
 
     function refreshList() {
         $("#items-list").html("");
+		itemCount = 0;
+		MAX_ITEM = 100;
         addItemstoList();
     }
 
@@ -243,9 +247,13 @@ require(["D2Bot"], function (D2BOTAPI) {
             API.emit("query", buildregex($("#search-bar").val().toLocaleLowerCase()), CurrentRealm, $account, $character, function (err, results) {
                 if (err) { console.log(err); return; };
                 var y = $(window).scrollTop();
+				
                 for (var i in results) {
                     $addItem(results[i]);
                 }
+				
+				itemCount += results.length;
+				
                 $(window).scrollTop(y);
                 
                 if (loadMoreItem) { 
@@ -281,7 +289,7 @@ require(["D2Bot"], function (D2BOTAPI) {
 
                 var acc = accList[accountListid++];
 
-                doQuery(acc, "", window.loadMoreItem);
+                doQuery(acc, "", itemCount > MAX_ITEM ? false : window.loadMoreItem);
             };
 
             window.loadMoreItem();
@@ -445,10 +453,10 @@ require(["D2Bot"], function (D2BOTAPI) {
         });
         pupulateAccountCharSelect(CurrentRealm, CurrentGameMode, CurrentGameType, CurrentGameClass);
 
-
+		var intCount = 0;
         $(function () {
             setInterval(function () {
-                var pos;
+                /*var pos;
 
                 var pageTopToDivBottom = $("#load-more").offset().top + $("#load-more")[0].scrollHeight;
                 var scrolledPlusViewable = $(window).scrollTop() + $(window).height();
@@ -462,9 +470,18 @@ require(["D2Bot"], function (D2BOTAPI) {
 
                 if (pos == "see") {
                     if (window.loadMoreItem) window.loadMoreItem();
-                }
-                
-                if (cookie.data.loggedin) {
+                }*/
+				var scrollHeight = $(document).height();
+				var scrollPosition = $(window).height() + $(window).scrollTop();
+				if ((scrollHeight - scrollPosition) / scrollHeight < 0.3 && itemCount > MAX_ITEM) {
+					if (window.loadMoreItem) {
+						MAX_ITEM += 50;
+						window.loadMoreItem();
+					}
+				}
+
+                if (cookie.data.loggedin && intCount++ > 20) {
+					intCount = 0;
                     API.emit("poll", function (err, msg) {
                         if (msg.body === "empty") {
                             return;
@@ -478,7 +495,7 @@ require(["D2Bot"], function (D2BOTAPI) {
                         }
                     });
                 }
-            }, 3000);
+            }, 100);
         });
 
         $("#log-accounts").off("click");
@@ -574,6 +591,16 @@ require(["D2Bot"], function (D2BOTAPI) {
             login("public", "public", cookie.data.server, function(loggedin){});
         });
     }
+	
+	/*$(window).on("scroll", function() {
+		var scrollHeight = $(document).height();
+		var scrollPosition = $(window).height() + $(window).scrollTop();
+		if ((scrollHeight - scrollPosition) / scrollHeight < 0.4 && itemCount > 100) {
+			if (window.loadMoreItem) {
+				window.loadMoreItem();
+			}
+		}
+	});*/
 
     $(".add-acc-btn").click(function () {
         $("#add-accounts-modal").modal('show');
