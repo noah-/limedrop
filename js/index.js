@@ -269,9 +269,13 @@ require(["D2Bot"], function (D2BOTAPI) {
         if (character == "Show All") {
             var accList = [];
 
-            for (var i in AccountsMap) {
-                accList.push(i);
-            }
+			if (account == "Show All") {
+				for (var i in AccountsMap) {
+					accList.push(i);
+				}
+			} else {
+				accList.push(account);
+			}
 
             var accountListid = 0;
             ended = false;
